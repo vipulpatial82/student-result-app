@@ -41,25 +41,35 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Backend Docker Image') {
             steps {
-                echo '🐳 Building Docker images...'
-                sh 'docker-compose build --no-cache'
+                echo '🐳 Building backend Docker image...'
+                sh 'docker build -t student-result-backend ./backend'
             }
         }
 
-        // 🔥 NEW FIX (IMPORTANT)
+        stage('Build Frontend Docker Image') {
+            steps {
+                echo '🐳 Building frontend Docker image...'
+                sh 'docker build -t student-result-frontend ./frontend'
+            }
+        }
+
         stage('Stop Old Containers') {
             steps {
                 echo '🛑 Stopping old containers...'
-                sh 'docker-compose down || true'
+                sh 'docker stop react-frontend || true'
+                sh 'docker stop node-backend || true'
+                sh 'docker rm react-frontend || true'
+                sh 'docker rm node-backend || true'
             }
         }
 
         stage('Run Containers') {
             steps {
                 echo '🚀 Starting containers...'
-                sh 'docker-compose up -d'
+                sh 'docker run -d -p 5000:5000 --name node-backend -e GEMINI_API_KEY=$GEMINI_API_KEY student-result-backend'
+                sh 'docker run -d -p 3000:3000 --name react-frontend student-result-frontend'
             }
         }
     }
