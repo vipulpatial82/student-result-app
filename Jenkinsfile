@@ -6,6 +6,7 @@ pipeline {
     }
 
     stages {
+
         stage('Clone Repository') {
             steps {
                 echo '📥 Cloning repository...'
@@ -43,7 +44,15 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo '🐳 Building Docker images...'
-                sh 'docker-compose build'
+                sh 'docker-compose build --no-cache'
+            }
+        }
+
+        // 🔥 NEW FIX (IMPORTANT)
+        stage('Stop Old Containers') {
+            steps {
+                echo '🛑 Stopping old containers...'
+                sh 'docker-compose down || true'
             }
         }
 
