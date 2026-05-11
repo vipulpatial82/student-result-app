@@ -118,7 +118,7 @@ function App() {
           </div>
 
           <button className="ai-button" onClick={handleAISuggestion} disabled={aiLoading}>
-            {aiLoading ? '⏳ Generating AI suggestion...' : '🤖 Get AI Suggestion'}
+            {aiLoading ? ' Generating AI suggestion...' : '🤖 Get AI Suggestion'}
           </button>
 
           {aiSuggestion && (
