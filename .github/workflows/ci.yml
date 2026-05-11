@@ -36,8 +36,11 @@ jobs:
           cd frontend
           npm run build
 
-      - name: 🐳 Build Docker Images
-        run: docker-compose build
+      - name: 🐳 Build Backend Docker Image
+        run: docker build -t student-result-backend ./backend
+
+      - name: 🐳 Build Frontend Docker Image
+        run: docker build -t student-result-frontend ./frontend
 
       - name: ✅ Pipeline Success
-        run: echo "Pipeline completed successfully!"
+        run: echo "🎉 Pipeline completed successfully!"
