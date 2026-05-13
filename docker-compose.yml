@@ -3,10 +3,11 @@ version: '3.8'
 services:
   backend:
     build: ./backend
+    container_name: node-backend
     ports:
       - "5001:5000"
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    env_file:
+      - ./backend/.env
     networks:
       - app-network
 
