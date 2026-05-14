@@ -90,7 +90,7 @@ async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
         'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-2',
+        model: 'grok-1',
         messages: [
           {
             role: 'user',
