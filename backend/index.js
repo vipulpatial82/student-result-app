@@ -83,7 +83,7 @@ async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
       grade
     );
 
-    const response = await fetch('https://api.x.ai/openai/', {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ async function fetchAISuggestion(studentName, marks, percentage, grade) {
       console.log('🚀 Starting Gemini Request');
 
       const model = genAI.getGenerativeModel({
-        model: 'gemini-pro',
+        model: 'gemini-1.5-flash',
       });
 
       const prompt = buildSuggestionPrompt(
