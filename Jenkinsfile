@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         GEMINI_API_KEY = credentials('GEMINI_API_KEY')
+        GROK_API_KEY = credentials('GROK_API_KEY')
     }
 
     stages {
@@ -68,7 +69,7 @@ pipeline {
         stage('Run Containers') {
             steps {
                 echo '🚀 Starting containers...'
-                sh 'docker run -d -p 5000:5000 --name node-backend -e GEMINI_API_KEY=$GEMINI_API_KEY student-result-backend'
+                sh 'docker run -d -p 5000:5000 --name node-backend -e GEMINI_API_KEY=$GEMINI_API_KEY -e GROK_API_KEY=$GROK_API_KEY student-result-backend'
                 sh 'docker run -d -p 3000:3000 --name react-frontend student-result-frontend'
             }
         }

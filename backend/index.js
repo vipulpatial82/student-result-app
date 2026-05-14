@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 console.log('🔑 Gemini Key Exists:', !!process.env.GEMINI_API_KEY);
+console.log('🔑 Grok Key Exists:', !!process.env.GROK_API_KEY);
 
 const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -66,19 +67,15 @@ Keep response motivational, simple, and student-friendly.
 `;
 }
 
-async function fetchAISuggestion(studentName, marks, percentage, grade) {
-  if (!genAI) {
-    console.log('❌ No Gemini API key found');
-    return DEFAULT_AI_SUGGESTION;
+async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
+  if (!process.env.GROK_API_KEY) {
+    console.log('❌ No Grok API key found');
+    return null;
   }
 
+  console.log('🚀 Trying Grok API as fallback for', studentName);
+
   try {
-    console.log('🚀 Starting Gemini Request');
-
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-    });
-
     const prompt = buildSuggestionPrompt(
       studentName,
       marks,
@@ -86,29 +83,106 @@ async function fetchAISuggestion(studentName, marks, percentage, grade) {
       grade
     );
 
-    console.log('📄 Prompt Created');
+    const response = await fetch('https://api.x.ai/openai/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-beta',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    });
 
-    const result = await model.generateContent(prompt);
-
-    console.log('✅ Gemini Response Received');
-
-    const response = await result.response;
-
-    const text = response.text();
-
-    if (text) {
-      console.log('✅ AI Suggestion Generated Successfully');
-      return text.trim();
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('❌ Grok API Error:', response.status, error);
+      return null;
     }
 
-    console.log('⚠️ Empty AI response, using fallback');
+    const data = await response.json();
 
-    return DEFAULT_AI_SUGGESTION;
+    if (data.choices && data.choices[0]?.message?.content) {
+      console.log('✅ Grok Suggestion Generated Successfully');
+      return data.choices[0].message.content.trim();
+    }
+
+    console.log('⚠️ Empty Grok response');
+    return null;
 
   } catch (error) {
-    console.error('❌ FULL AI ERROR:', error);
+    console.error('❌ Grok API Error:', error.message || error);
+    return null;
+  }
+}
+
+async function fetchAISuggestion(studentName, marks, percentage, grade) {
+  if (!genAI && !process.env.GROK_API_KEY) {
+    console.log('❌ No Gemini or Grok API keys found');
     return DEFAULT_AI_SUGGESTION;
   }
+
+  // Try Google Generative AI first
+  if (genAI) {
+    try {
+      console.log('🚀 Starting Gemini Request');
+
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-pro',
+      });
+
+      const prompt = buildSuggestionPrompt(
+        studentName,
+        marks,
+        percentage,
+        grade
+      );
+
+      console.log('📄 Prompt Created');
+
+      const result = await model.generateContent(prompt);
+
+      console.log('✅ Gemini Response Received');
+
+      const response = await result.response;
+
+      const text = response.text();
+
+      if (text) {
+        console.log('✅ AI Suggestion Generated Successfully using Gemini');
+        return text.trim();
+      }
+
+      console.log('⚠️ Empty Gemini response, trying Grok fallback');
+
+    } catch (error) {
+      console.error('❌ Gemini API Error:', error.message || error);
+      console.log('🔄 Switching to Grok fallback');
+    }
+  }
+
+  // Fallback to Grok API
+  const grokSuggestion = await fetchGrokSuggestion(
+    studentName,
+    marks,
+    percentage,
+    grade
+  );
+
+  if (grokSuggestion) {
+    return grokSuggestion;
+  }
+
+  console.log('⚠️ Both APIs failed, using default suggestion');
+  return DEFAULT_AI_SUGGESTION;
 }
 
 // ---------------- RESULT API ----------------
@@ -156,6 +230,8 @@ app.post('/api/result', (req, res) => {
 app.post('/api/suggestion', async (req, res) => {
   try {
     const { studentName, marks, percentage, grade } = req.body;
+
+    console.log('Suggestion API called for', studentName, 'body:', JSON.stringify(req.body));
 
     if (!marks || typeof marks !== 'object') {
       return res.status(400).json({
