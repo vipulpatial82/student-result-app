@@ -125,63 +125,6 @@ async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
 }
 
 async function fetchAISuggestion(studentName, marks, percentage, grade) {
-  if (!genAI && !process.env.GROK_API_KEY) {
-    console.log('❌ No Gemini or Grok API keys found');
-    return DEFAULT_AI_SUGGESTION;
-  }
-
-  // Try Google Generative AI first
-  if (genAI) {
-    try {
-      console.log('🚀 Starting Gemini Request');
-
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-      });
-
-      const prompt = buildSuggestionPrompt(
-        studentName,
-        marks,
-        percentage,
-        grade
-      );
-
-      console.log('📄 Prompt Created');
-
-      const result = await model.generateContent(prompt);
-
-      console.log('✅ Gemini Response Received');
-
-      const response = await result.response;
-
-      const text = response.text();
-
-      if (text) {
-        console.log('✅ AI Suggestion Generated Successfully using Gemini');
-        return text.trim();
-      }
-
-      console.log('⚠️ Empty Gemini response, trying Grok fallback');
-
-    } catch (error) {
-      console.error('❌ Gemini API Error:', error.message || error);
-      console.log('🔄 Switching to Grok fallback');
-    }
-  }
-
-  // Fallback to Grok API
-  const grokSuggestion = await fetchGrokSuggestion(
-    studentName,
-    marks,
-    percentage,
-    grade
-  );
-
-  if (grokSuggestion) {
-    return grokSuggestion;
-  }
-
-  console.log('⚠️ Both APIs failed, using default suggestion');
   return DEFAULT_AI_SUGGESTION;
 }
 
