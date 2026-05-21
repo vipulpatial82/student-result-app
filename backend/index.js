@@ -47,6 +47,21 @@ function normalizeMarks(marks = {}) {
   };
 }
 
+function validateMarks(marks) {
+  const subjects = ['math', 'science', 'english', 'hindi', 'computer'];
+  for (const subject of subjects) {
+    const val = marks[subject];
+    if (val === undefined || val === null || val === '') {
+      return `Marks for ${subject} are required`;
+    }
+    const num = Number(val);
+    if (isNaN(num) || num < 0 || num > 100) {
+      return `Marks for ${subject} must be a number between 0 and 100`;
+    }
+  }
+  return null;
+}
+
 function buildSuggestionPrompt(studentName, marks, percentage, grade) {
   return `
 A student named ${studentName || 'the student'} scored ${percentage}% and received grade ${grade}.
@@ -125,6 +140,30 @@ async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
 }
 
 async function fetchAISuggestion(studentName, marks, percentage, grade) {
+  if (genAI) {
+    console.log('🚀 Trying Gemini API for', studentName);
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = buildSuggestionPrompt(studentName, marks, percentage, grade);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      if (text && text.trim()) {
+        console.log('✅ Gemini Suggestion Generated Successfully');
+        return text.trim();
+      }
+    } catch (error) {
+      console.error('❌ Gemini API Error:', error.message || error);
+    }
+  }
+
+  // Fallback to Grok
+  const grokSuggestion = await fetchGrokSuggestion(studentName, marks, percentage, grade);
+  if (grokSuggestion) {
+    return grokSuggestion;
+  }
+
+  console.log('⚠️ Using default AI suggestion fallback');
   return DEFAULT_AI_SUGGESTION;
 }
 
@@ -137,6 +176,13 @@ app.post('/api/result', (req, res) => {
     if (!marks || typeof marks !== 'object') {
       return res.status(400).json({
         error: 'Marks are required',
+      });
+    }
+
+    const validationError = validateMarks(marks);
+    if (validationError) {
+      return res.status(400).json({
+        error: validationError,
       });
     }
 
@@ -179,6 +225,13 @@ app.post('/api/suggestion', async (req, res) => {
     if (!marks || typeof marks !== 'object') {
       return res.status(400).json({
         error: 'Marks are required',
+      });
+    }
+
+    const validationError = validateMarks(marks);
+    if (validationError) {
+      return res.status(400).json({
+        error: validationError,
       });
     }
 

@@ -100,12 +100,36 @@ button:disabled { background: #666; cursor: not-allowed; }
   margin-top: 20px;
   background: rgba(233, 69, 96, 0.1);
   border-radius: 10px;
-  padding: 15px;
+  padding: 20px;
   border-left: 4px solid #e94560;
+  text-align: left;
 }
 
-.ai-suggestion h3 { margin-bottom: 10px; color: #e94560; }
-.ai-suggestion p { line-height: 1.6; color: rgba(255,255,255,0.85); }
+.ai-suggestion h3 { margin-bottom: 15px; color: #e94560; font-size: 1.2rem; }
+
+.ai-suggestion-content {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.ai-suggestion-content p {
+  margin-bottom: 8px;
+}
+
+.ai-suggestion-content ul {
+  margin-left: 20px;
+  margin-bottom: 12px;
+  list-style-type: disc;
+}
+
+.ai-suggestion-content li {
+  margin-bottom: 6px;
+}
+
+.ai-suggestion-content strong {
+  color: #ff6b81;
+}
 .reset-button {
   padding: 14px;
   background: transparent;

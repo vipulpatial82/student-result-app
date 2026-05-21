@@ -1,6 +1,56 @@
 import React, { useState } from 'react';
 import './App.css';
 
+const formatSuggestionText = (text) => {
+  if (!text) return null;
+  
+  const lines = text.split('\n');
+  const renderedElements = [];
+  let currentList = [];
+  
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    
+    if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+      const cleanLine = trimmed.replace(/^[\s*-]+/, '');
+      const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+      const renderedLine = parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i}>{part.replace(/\*\*/g, '')}</strong>;
+        }
+        return part;
+      });
+      
+      currentList.push(<li key={`li-${index}`}>{renderedLine}</li>);
+    } else {
+      if (currentList.length > 0) {
+        renderedElements.push(<ul key={`ul-${index}`}>{currentList}</ul>);
+        currentList = [];
+      }
+      
+      if (trimmed === '') {
+        return;
+      }
+      
+      const parts = trimmed.split(/(\*\*.*?\*\*)/g);
+      const renderedParagraph = parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i}>{part.replace(/\*\*/g, '')}</strong>;
+        }
+        return part;
+      });
+      
+      renderedElements.push(<p key={`p-${index}`}>{renderedParagraph}</p>);
+    }
+  });
+  
+  if (currentList.length > 0) {
+    renderedElements.push(<ul key="ul-trailing">{currentList}</ul>);
+  }
+  
+  return renderedElements;
+};
+
 function App() {
   const [studentName, setStudentName] = useState('');
   const [marks, setMarks] = useState({
@@ -16,6 +66,13 @@ function App() {
     const allFilled = Object.values(marks).every(m => m !== '');
     if (!allFilled) return alert('Please enter all subject marks!');
 
+    for (const [subject, val] of Object.entries(marks)) {
+      const num = Number(val);
+      if (isNaN(num) || num < 0 || num > 100) {
+        return alert(`Please enter valid marks between 0 and 100 for ${subject.charAt(0).toUpperCase() + subject.slice(1)}!`);
+      }
+    }
+
     setLoading(true);
     setAiSuggestion('');
     setResult(null);
@@ -26,8 +83,14 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentName, marks })
       });
-      const data = await response.json();
-      setResult(data);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to calculate result.');
+      } else {
+        const data = await response.json();
+        setResult(data);
+      }
     } catch (error) {
       alert('Error connecting to server! Make sure backend is running.');
     }
@@ -50,8 +113,13 @@ function App() {
         }),
       });
 
-      const data = await response.json();
-      setAiSuggestion(data.aiSuggestion || 'No suggestion available.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.error || 'Error generating AI suggestion.');
+      } else {
+        const data = await response.json();
+        setAiSuggestion(data.aiSuggestion || 'No suggestion available.');
+      }
     } catch (error) {
       alert('Error generating AI suggestion. Please try again.');
     }
@@ -124,7 +192,9 @@ function App() {
           {aiSuggestion && (
             <div className="ai-suggestion">
               <h3>🤖 AI Study Suggestion</h3>
-              <p>{aiSuggestion}</p>
+              <div className="ai-suggestion-content">
+                {formatSuggestionText(aiSuggestion)}
+              </div>
             </div>
           )}
         </div>
