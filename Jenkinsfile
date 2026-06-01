@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_BUILDKIT = '0'
         GEMINI_API_KEY = credentials('GEMINI_API_KEY')
         GROK_API_KEY = credentials('GROK_API_KEY')
     }
@@ -19,14 +18,14 @@ pipeline {
         stage('Build Backend Docker Image') {
             steps {
                 echo '🐳 Building backend Docker image...'
-                bat 'set DOCKER_BUILDKIT=0 && docker build --no-cache -t student-result-backend ./backend'
+                bat 'set "DOCKER_BUILDKIT=0" && docker build --no-cache -t student-result-backend ./backend'
             }
         }
 
         stage('Build Frontend Docker Image') {
             steps {
                 echo '🐳 Building frontend Docker image...'
-                bat 'set DOCKER_BUILDKIT=0 && docker build --no-cache --build-arg REACT_APP_API_URL=http://node-backend:5000 -t student-result-frontend ./frontend'
+                bat 'set "DOCKER_BUILDKIT=0" && docker build --no-cache --build-arg REACT_APP_API_URL=http://node-backend:5000 -t student-result-frontend ./frontend'
             }
         }
 
