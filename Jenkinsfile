@@ -25,7 +25,7 @@ pipeline {
         stage('Build Frontend Docker Image') {
             steps {
                 echo '🐳 Building frontend Docker image...'
-                bat 'set "DOCKER_BUILDKIT=0" && docker build --no-cache --build-arg REACT_APP_API_URL=http://node-backend:5000 -t student-result-frontend ./frontend'
+                bat 'set "DOCKER_BUILDKIT=0" && docker build --no-cache --build-arg REACT_APP_API_URL=http://localhost:5000 -t student-result-frontend ./frontend'
             }
         }
 
