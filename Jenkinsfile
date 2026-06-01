@@ -25,7 +25,8 @@ pipeline {
         stage('Build Frontend Docker Image') {
             steps {
                 echo '🐳 Building frontend Docker image...'
-                bat 'docker build --build-arg REACT_APP_API_URL=http://localhost:5000 -t student-result-frontend ./frontend'
+                // ✅ Fixed: use node-backend (container name) not localhost
+                bat 'docker build --build-arg REACT_APP_API_URL=http://node-backend:5000 -t student-result-frontend ./frontend'
             }
         }
 
@@ -44,7 +45,9 @@ pipeline {
             steps {
                 echo '🚀 Starting containers...'
                 bat 'docker network create app-network || exit 0'
+                // ✅ Backend starts first
                 bat 'docker run -d -p 5000:5000 --name node-backend --network app-network -e GEMINI_API_KEY=%GEMINI_API_KEY% -e GROK_API_KEY=%GROK_API_KEY% student-result-backend'
+                // ✅ Frontend starts after backend
                 bat 'docker run -d -p 3000:3000 --name react-frontend --network app-network student-result-frontend'
             }
         }

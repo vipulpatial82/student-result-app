@@ -15,7 +15,8 @@ services:
     build:
       context: ./frontend
       args:
-        REACT_APP_API_URL: http://localhost:5000
+        REACT_APP_API_URL: http://node-backend:5000  # ✅ container name, not localhost
+    container_name: react-frontend
     ports:
       - "3000:3000"
     depends_on:
