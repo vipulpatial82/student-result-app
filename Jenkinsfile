@@ -14,32 +14,6 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Install Backend Dependencies') {
-            steps {
-                echo '📦 Installing backend dependencies...'
-                dir('backend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Install Frontend Dependencies') {
-            steps {
-                echo '📦 Installing frontend dependencies...'
-                dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                echo '🔨 Building React app...'
-                dir('frontend') {
-                    sh 'npm run build'
-                }
-            }
-        }
 
         stage('Build Backend Docker Image') {
             steps {
@@ -51,7 +25,7 @@ pipeline {
         stage('Build Frontend Docker Image') {
             steps {
                 echo '🐳 Building frontend Docker image...'
-                sh 'docker build -t student-result-frontend ./frontend'
+                sh 'docker build --build-arg REACT_APP_API_URL=http://localhost:5000 -t student-result-frontend ./frontend'
             }
         }
 
@@ -62,21 +36,23 @@ pipeline {
                 sh 'docker stop node-backend || true'
                 sh 'docker rm react-frontend || true'
                 sh 'docker rm node-backend || true'
+                sh 'docker network rm app-network || true'
             }
         }
 
         stage('Run Containers') {
             steps {
                 echo '🚀 Starting containers...'
-                sh 'docker run -d -p 5000:5000 --name node-backend -e GEMINI_API_KEY=$GEMINI_API_KEY -e GROK_API_KEY=$GROK_API_KEY student-result-backend'
-                sh 'docker run -d -p 3000:3000 --name react-frontend student-result-frontend'
+                sh 'docker network create app-network || true'
+                sh 'docker run -d -p 5000:5000 --name node-backend --network app-network -e GEMINI_API_KEY=$GEMINI_API_KEY -e GROK_API_KEY=$GROK_API_KEY student-result-backend'
+                sh 'docker run -d -p 3000:3000 --name react-frontend --network app-network student-result-frontend'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo '✅ Pipeline completed successfully! App running at http://localhost:3000'
         }
         failure {
             echo '❌ Pipeline failed!'
