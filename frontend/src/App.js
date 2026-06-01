@@ -78,7 +78,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/result', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentName, marks })
@@ -102,7 +102,7 @@ function App() {
     setAiLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/suggestion', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/suggestion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
