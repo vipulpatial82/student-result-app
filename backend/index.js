@@ -105,7 +105,7 @@ async function fetchGrokSuggestion(studentName, marks, percentage, grade) {
         'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-1',
+        model: 'grok-3',
         messages: [
           {
             role: 'user',
@@ -143,7 +143,7 @@ async function fetchAISuggestion(studentName, marks, percentage, grade) {
   if (genAI) {
     console.log('🚀 Trying Gemini API for', studentName);
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       const prompt = buildSuggestionPrompt(studentName, marks, percentage, grade);
       const result = await model.generateContent(prompt);
       const response = await result.response;
